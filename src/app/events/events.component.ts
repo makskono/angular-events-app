@@ -14,10 +14,10 @@ export class EventsComponent implements OnInit {
       registered: '',
     },
   ];
-  constructor(private _eventService: EventService) {}
+  constructor(private eventService: EventService) {}
 
-  ngOnInit() {
-    this._eventService.getEvents().subscribe(
+  ngOnInit(): void {
+    this.eventService.getEvents().subscribe(
       (res) => (this.events = res),
       (err) => console.log(err)
     );

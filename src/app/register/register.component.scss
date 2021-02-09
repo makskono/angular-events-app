@@ -1,3 +1,16 @@
+.card-light {
+  background-color: #f5f2f0;
+}
 .card-title__register-form {
   margin-bottom: 2rem!important;
+}
+.card-title {
+  color: #a4a4a4;
+}
+.card-content>ul>li{
+  font-weight: lighter;
+  line-height: 2;
+  padding-top: 1em;
+  letter-spacing: 1px;
+  color: #999;
 }

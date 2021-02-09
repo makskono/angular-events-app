@@ -1,12 +1,16 @@
 <nav>
   <div class="nav-wrapper">
-    <a href=# class="brand-logo">Logo</a>
-    <ul class="right hide-on-med-and-down">
+    <a href=# class="brand-logo">Site</a>
+    <div class="nav-container">
+    <ul class="left hide-on-med-and-down">
       <li><a routerLink="/events" routerLinkActive="active">Events</a></li>
       <li><a routerLink="/special" routerLinkActive="active">Special</a></li>
-      <li><a routerLink="/login" routerLinkActive="active">Login</a></li>
-      <li><a routerLink="/register" routerLinkActive="active">Register</a></li>
     </ul>
+      <ul class="right hide-on-med-and-down">
+           <li><a *ngIf="!authService.loggedIn()" routerLink="/login" routerLinkActive="active">Login</a></li>
+      <li><a *ngIf="!authService.loggedIn()" routerLink="/register" routerLinkActive="active">Register</a></li>
+        <li><a *ngIf="authService.loggedIn()" (click)="authService.logoutUser()">Logout</a></li>
+      </ul></div>
   </div>
 </nav>
 <div class="container">

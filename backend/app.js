@@ -1,15 +1,15 @@
-const express = require("express");
-const bodyparser = require("body-parser");
-const cors = require("cors");
+const EXPRESS = require("express");
+const BODY_PARSER = require("body-parser");
+const CORS = require("cors");
 
-const api = require("./api");
-const app = express();
+const API = require("./api");
+const APP = EXPRESS();
 
-app.use(cors());
+APP.use(CORS());
 
-app.use(bodyparser.json());
+APP.use(BODY_PARSER.json());
 
-app.use("/api", api);
-app.get("/", (req, res) => res.send("Express hello"));
+APP.use("/api", API);
+APP.get("/", (req, res) => res.send("Express hello"));
 
-module.exports = app;
+module.exports = APP;

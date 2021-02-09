@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { AuthService } from '../auth.service';
 
 @Component({
@@ -7,20 +8,25 @@ import { AuthService } from '../auth.service';
   styleUrls: ['./login.component.scss'],
 })
 export class LoginComponent implements OnInit {
+  appLoginTitle = 'Tab Special is only available for registered users ';
   loginTitle = 'Login';
 
   loginUserData = {
     email: '',
     password: '',
   };
-  constructor(private _auth: AuthService) {}
+  constructor(private auth: AuthService, private router: Router) {}
 
   ngOnInit(): void {}
 
-  loginUser() {
-    this._auth.loginUser(this.loginUserData).subscribe(
-      (res) => console.log(res),
-      (err) => console.log(err)
+  loginUser(): void {
+    this.auth.loginUser(this.loginUserData).subscribe(
+      (res: any) => {
+        console.log(res);
+        localStorage.setItem('token', res.token);
+        this.router.navigate(['/special']);
+      },
+      (err: string) => console.log(err)
     );
   }
 }

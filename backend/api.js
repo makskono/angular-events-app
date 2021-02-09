@@ -1,57 +1,93 @@
-const express = require("express");
-const router = express.Router();
-const User = require("../backend/models/user");
-const mongoose = require("mongoose");
-const path = require("path");
-require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
+const EXPRESS = require("express");
+const JWT = require("jsonwebtoken");
+const ROUTER = EXPRESS.Router();
+const USER = require("../backend/models/user");
+const MONGOOSE = require("mongoose");
+const PATH = require("path");
+const BCRYPT = require("bcryptjs");
+require("dotenv").config({ path: PATH.resolve(__dirname, "../.env") });
 
-const db = process.env.MONGODB_URI;
-const connectOptions = {
+const DB = process.env.MONGODB_URI;
+const CONNECT_OPTIONS = {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   useFindAndModify: false,
   useCreateIndex: true,
 };
 
-mongoose.connect(db, connectOptions).then(
+MONGOOSE.connect(DB, CONNECT_OPTIONS).then(
   () => console.log("Database successfully connected"),
   (err) => console.error("Database could not connected: " + err)
 );
 
-//router.get("/", (req, res) => res.send("Form Api Route"));
+function verifyToken(req, res, next) {
+  if (!req.headers.authorization) {
+    return res.status(401).send("Unauthorized request");
+  }
+  let token = req.headers.authorization.split(" ")[1];
+  if (token === "null") {
+    return res.status(401).send("Unauthorized request");
+  }
+  let payload = JWT.verify(token, "secret");
+  if (!payload) {
+    return res.status(401).send("Unauthorized request");
+  }
+  req.userId = payload.subject;
+  next();
+}
 
-router.post("/register", (req, res) => {
-  let userData = req.body;
-  let user = new User(userData);
-  user.save((error, registeredUser) => {
-    if (error) {
-      console.log(error);
+ROUTER.post("/register", (req, res) => {
+  USER.findOne({ email: req.body.email }).then((candidate) => {
+    if (candidate) {
+      return res.status(401).send("User already exists");
     } else {
-      res.status(200).send(registeredUser);
-      console.log(registeredUser);
+      const SALT = BCRYPT.genSaltSync(10);
+      const PASSWORD = req.body.password;
+
+      let user = new USER({
+        name: req.body.name,
+        email: req.body.email,
+        password: BCRYPT.hashSync(PASSWORD, SALT),
+      });
+
+      user.save((error, registeredUser) => {
+        if (error) {
+          console.log(error);
+        } else {
+          let payload = { subject: registeredUser._id };
+          let token = JWT.sign(payload, "secret", { expiresIn: "1h" });
+          res.status(201).send({ token });
+          console.log("Token generated success");
+        }
+      });
     }
   });
 });
 
-router.post("/login", (req, res) => {
-  let userData = req.body;
+ROUTER.post("/login", (req, res) => {
+  USER.findOne({ email: req.body.email }).then((user) => {
+    if (!user)
+      return res.status(400).json({
+        msg: "User not exist",
+      });
 
-  User.findOne({ email: userData.email }, (error, user) => {
-    if (error) {
-      console.log(error);
-    } else {
-      if (!user) {
-        res.status(401).send("Invalid email");
-      } else if (user.password !== userData.password) {
-        res.status(401).send("Invalid password");
-      } else {
-        res.status(200).send(user);
+    BCRYPT.compare(req.body.password, user.password, (error, data) => {
+      if (error) {
+        console.log(error);
       }
-    }
+      if (data) {
+        let payload = { subject: user._id };
+        let token = JWT.sign(payload, "secret", { expiresIn: "1h" });
+        res.status(200).send({ token });
+        //res.status(200).json({ msg: "all ok" });
+      } else {
+        res.status(401).json({ msg: "Invalid credential" });
+      }
+    });
   });
 });
 
-router.get("/events", (req, res) => {
+ROUTER.get("/events", (req, res) => {
   let events = [
     {
       index: 0,
@@ -98,14 +134,14 @@ router.get("/events", (req, res) => {
       picture: "https://via.placeholder.com/100/ee6e73/FFFFFF/?text=Angular",
       title: "MEDIFAX",
       about:
-        "Mollit do duis irure tempor ea mollit proident commodo ut ea veniam. Mollit eu nisi ea voluptate incididunt id. Ipsum ad excepteur ipsum et ullamco. Officia ipsum cillum exercitation anim ea nisi consectetur deserunt culpa irure ad sit tempor.\r\n",
+        "Mollit do duis irure tempor ea mollit proident commodo ut ea veniam. Mollit eu nisi ea voluptate incididunt id.\r\n",
       registered: "2021-02-02T19:42:49.043Z",
     },
   ];
   res.json(events);
 });
 
-router.get("/special", (req, res) => {
+ROUTER.get("/special", verifyToken, (req, res) => {
   let specialEvents = [
     {
       index: 0,
@@ -159,4 +195,5 @@ router.get("/special", (req, res) => {
   res.json(specialEvents);
 });
 
-module.exports = router;
+ROUTER.get("/", (req, res) => res.send("Form Api Route"));
+module.exports = ROUTER;
